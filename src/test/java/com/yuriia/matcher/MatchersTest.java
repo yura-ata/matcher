@@ -46,7 +46,7 @@ public class MatchersTest {
             System.out.println(value);
         }
 
-        MatcherImpl<Shape, Number> matcher = new MatcherImpl<>();
+        Matcher<Shape, Number> matcher = new MatcherImpl<>();
         for (Shape shape : Arrays.asList(new Circle(2), new Square(3), new Rectangle(2, 5))) {
             Number value = matcher.match(shape)
                     .with(Circle.class)
