@@ -47,3 +47,18 @@ interface Shape {}
         }
     }
 ```
+Or:
+```
+for (Object value : Arrays.asList("str", "long str", 5, "string", new Date())) {
+            String metchedValue = Matchers.match(value, String.class)
+                    .with(String.class).where(s -> s.length() > 5)
+                        .get(s -> "long string: " + s)
+                    .with(Integer.class)
+                        .get(i -> "integer: " + i)
+                    .with(v -> v.equals("str"))
+                        .get(v -> "predicate matcher")
+                    .defaultCase("nothing")
+                    .value();
+        }
+```
+Etc...
