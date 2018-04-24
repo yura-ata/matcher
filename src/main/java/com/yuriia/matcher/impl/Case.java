@@ -12,18 +12,18 @@ import java.util.function.Predicate;
  *
  * @author yuriia
  */
-class Case<T, R> {
+public class Case<T, R> {
 
     /**
      * Predicate to check if given mapper function should be executed to get result.
      */
-    private Predicate<? super T> casePredicate;
+    Predicate<? super T> casePredicate;
     /**
      * Function to get result of the current Matcher.
      */
-    private Function<? super T, ? extends R> mapper;
+    Function<? super T, ? extends R> mapper;
 
-    Case(Predicate<? super T> casePredicate) {
+    public Case(Predicate<? super T> casePredicate) {
         this.casePredicate = casePredicate;
     }
 
@@ -33,7 +33,7 @@ class Case<T, R> {
      * @param value - value to test
      * @return true if current case matches with given value
      */
-    boolean matches(T value) {
+    public boolean matches(T value) {
         return casePredicate.test(value);
     }
 
@@ -43,7 +43,7 @@ class Case<T, R> {
      * @param value - value to map
      * @return result of matching
      */
-    R map(T value) {
+    public R map(T value) {
         return this.mapper.apply(value);
     }
 

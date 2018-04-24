@@ -1,4 +1,4 @@
-package com.yuriia.matcher;
+package com.yuriia.matcher.steps;
 
 import java.util.function.Predicate;
 

@@ -1,4 +1,6 @@
-package com.yuriia.matcher;
+package com.yuriia.matcher.steps;
+
+import com.yuriia.matcher.Step;
 
 import java.util.function.Function;
 
@@ -10,7 +12,7 @@ import java.util.function.Function;
  *            {@code .match(object).with(String.class)} - now C is String instead of just Object
  * @author yuriia
  */
-public interface CaseStep<T, C extends T, R> {
+public interface CaseStep<T, C extends T, R> extends Step {
 
     /**
      * When given value matches matches to the current case - use it to compute result of the the current matcher.
@@ -18,5 +20,5 @@ public interface CaseStep<T, C extends T, R> {
      * @param mapper - function to map matched value into result
      * @return next step (terminal step or more cases)
      */
-    MatchOrEndStep<T, R> get(Function<C, R> mapper);
+    MatchOrResultStep<T, R> get(Function<C, R> mapper);
 }

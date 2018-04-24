@@ -1,4 +1,6 @@
-package com.yuriia.matcher;
+package com.yuriia.matcher.steps;
+
+import com.yuriia.matcher.Step;
 
 import java.util.function.Predicate;
 
@@ -8,7 +10,7 @@ import java.util.function.Predicate;
  *
  * @author yuriia
  */
-public interface MatchStep<T, R> {
+public interface MatchStep<T, R> extends Step {
 
     /**
      * Match current values using given {@link Predicate}.

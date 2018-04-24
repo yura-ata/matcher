@@ -1,6 +1,5 @@
 package com.yuriia.matcher;
 
-import com.yuriia.matcher.impl.MatcherImpl;
 import org.junit.Test;
 
 import java.util.Date;
@@ -24,7 +23,7 @@ public class MatcherTest {
                 pair(5, "integer: 5"), pair("string", "long string: string"), pair(new Date(), "nothing")
         );
         for (Map.Entry<Object, String> object : objects) {
-            String value = Matcher.match(object.getKey(), String.class)
+            String value = Matcher.<Object, String>when()
                     .is(String.class).where(s -> s.length() > 5)
                         .get(s -> "long string: " + s)
                     .is(Integer.class)
@@ -32,7 +31,7 @@ public class MatcherTest {
                     .with(v -> v.equals("str"))
                         .get(v -> "predicate matcher")
                     .orGet("nothing")
-                    .value();
+                    .match(object.getKey());
             assertEquals(object.getValue(), value);
         }
 
@@ -40,7 +39,7 @@ public class MatcherTest {
         List<Map.Entry<Number, String>> numbers = asList(pair(77777L, "Long: 77777"),
                 pair(3, "Integer: 3"), pair(3.3f, "nothing"));
         for (Map.Entry<Number, String> number : numbers) {
-            String value = Matcher.match(number.getKey(), String.class)
+            String value = Matcher.<Object, String>when()
                     .is(Integer.class)
                         .get(i -> "Integer: " + i)
                     .is(Long.class)
@@ -48,28 +47,28 @@ public class MatcherTest {
                     .is(Float.class).where(f -> f < 3)
                         .get(f -> "Float: " + f)
                     .orGet("nothing")
-                    .value();
+                    .match(number.getKey());
             assertEquals(number.getValue(), value);
         }
 
         List<Map.Entry<Shape, Number>> shapes = asList(pair(new Circle(2), 12.566370614359172),
                 pair(new Square(3), 9), pair(new Rectangle(2, 5), 10));
-        Matcher<Shape, Number> matcher = new MatcherImpl<>();
+        Matcher<Shape, Number> matcher = Matcher.<Shape, Number>when()
+                .is(Circle.class)
+                    .get(c -> Math.PI * c.r * c.r)
+                .is(Square.class)
+                    .get(s -> s.a * s.a)
+                .is(Rectangle.class)
+                    .get(r -> r.a * r.b)
+                .compile();
         for (Map.Entry<Shape, Number> shape : shapes) {
-            Number value = matcher.match(shape.getKey())
-                    .is(Circle.class)
-                        .get(c -> Math.PI * c.r * c.r)
-                    .is(Square.class)
-                        .get(s -> s.a * s.a)
-                    .is(Rectangle.class)
-                        .get(r -> r.a * r.b)
-                    .value();
+            Number value = matcher.match(shape.getKey());
             assertEquals(shape.getValue(), value);
         }
 
         List<Map.Entry<Number, String>> numbers2 = asList(pair(777L, "instanceof Long: 777"), pair(3, "constant 3"));
         for (Map.Entry<Number, String> number : numbers2) {
-            String value = Matcher.match(number.getKey(), String.class)
+            String value = Matcher.<Number, String>when()
                     .is(3)
                         .get(i -> "constant 3")
                     .with(Long.class)
@@ -77,7 +76,7 @@ public class MatcherTest {
                     .is(Float.class).where(f -> f < 3)
                         .get(f -> "Float: " + f)
                     .orGet(() -> "nothing")
-                    .value();
+                    .match(number.getKey());
             assertEquals(number.getValue(), value);
         }
     }

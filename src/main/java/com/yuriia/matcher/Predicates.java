@@ -17,7 +17,7 @@ public class Predicates {
      * @return predicate
      */
     public static <T> Predicate<T> is(T constant) {
-        return new ConstantPredicate<>(t -> Objects.equals(t, constant), constant);
+        return new ConstantPredicate<>(constant);
     }
 
     /**
@@ -27,7 +27,7 @@ public class Predicates {
      * @return predicate
      */
     public static <T> Predicate<T> isType(Class<T> type) {
-        return new ConstantPredicate<>(t -> t != null && t.getClass().equals(type), type);
+        return new ConstantPredicate<>(type);
     }
 
     /**
@@ -51,38 +51,58 @@ public class Predicates {
         return t -> first.test(t) && second.test(t);
     }
 
+    public static abstract class OptimizablePredicate<T> implements Predicate<T> {
+
+        private final Object caseConstant;
+
+        private OptimizablePredicate(Object caseConstant) {
+            this.caseConstant = caseConstant;
+        }
+
+        public Object getCaseConstant() {
+            return caseConstant;
+        }
+
+        public abstract Object mapValue(T value);
+    }
+
     /**
      * Predicate to mark that current case is constant and can be optimized as map lookup (by constant keys) instead
      * of chain of predicates.
      *
      * @param <T> - type of the predicate value
      */
-    public static final class ConstantPredicate<T> implements Predicate<T> {
+    public static final class ConstantPredicate<T> extends OptimizablePredicate<T> {
 
-        /**
-         * Wrapped predicate
-         */
-        private final Predicate<T> predicate;
-        /**
-         * Constant value (that we can map on)
-         */
-        private final Object origin;
-
-        private ConstantPredicate(Predicate<T> predicate, Object origin) {
-            this.predicate = predicate;
-            this.origin = origin;
+        private ConstantPredicate(Object caseConstant) {
+            super(caseConstant);
         }
 
         @Override
         public boolean test(T t) {
-            return predicate.test(t);
+            return Objects.equals(t, getCaseConstant());
         }
 
-        /**
-         * @return origin constant value.
-         */
-        public Object origin() {
-            return origin;
+        @Override
+        public Object mapValue(T value) {
+            return value;
+        }
+    }
+
+    public static final class ClassPredicate<T> extends OptimizablePredicate<T> {
+
+        private ClassPredicate(Object caseConstant) {
+            super(caseConstant);
+        }
+
+        @Override
+        public boolean test(T t) {
+            return t != null && t.getClass().equals(getCaseConstant());
+        }
+
+        @Override
+        public Object mapValue(T value) {
+            return value != null ? value.getClass() : null;
         }
     }
 }

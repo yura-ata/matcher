@@ -1,8 +1,9 @@
 package com.yuriia.matcher.impl;
 
-import com.yuriia.matcher.CaseStep;
-import com.yuriia.matcher.MatchOrEndStep;
-import com.yuriia.matcher.WhereCaseStep;
+import com.yuriia.matcher.Matcher;
+import com.yuriia.matcher.steps.CaseStep;
+import com.yuriia.matcher.steps.MatchOrResultStep;
+import com.yuriia.matcher.steps.WhereCaseStep;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -17,13 +18,13 @@ class WhereCaseStepImpl<T, C extends T, R> implements WhereCaseStep<T, C, R> {
     /**
      * State of the Current matcher.
      */
-    private final MatcherImpl<T, R> matcher;
+    private final Matcher.MatcherImpl<T, R> matcher;
     /**
      * Current match case.
      */
     private final Case<C, R> matcherCase;
 
-    WhereCaseStepImpl(MatcherImpl<T, R> matcher, Predicate<? super C> predicate) {
+    WhereCaseStepImpl(Matcher.MatcherImpl<T, R> matcher, Predicate<? super C> predicate) {
         this.matcher = matcher;
         this.matcherCase = matcher.addCase(predicate);
     }
@@ -35,8 +36,8 @@ class WhereCaseStepImpl<T, C extends T, R> implements WhereCaseStep<T, C, R> {
     }
 
     @Override
-    public MatchOrEndStep<T, R> get(Function<C, R> mapper) {
+    public MatchOrResultStep<T, R> get(Function<C, R> mapper) {
         matcherCase.setCaseMapper(mapper);
-        return new MatchOrEndStepImpl<>(matcher);
+        return new MatchOrResultStepImpl<>(matcher);
     }
 }

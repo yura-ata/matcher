@@ -1,6 +1,13 @@
 package com.yuriia.matcher;
 
-import com.yuriia.matcher.impl.MatcherImpl;
+import com.yuriia.matcher.impl.Case;
+import com.yuriia.matcher.impl.DefaultCases;
+import com.yuriia.matcher.impl.MapLookupCases;
+import com.yuriia.matcher.impl.MatchOrResultStepImpl;
+import com.yuriia.matcher.steps.MatchStep;
+
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Functionality to emulate Pattern Matching. It is similar to 'switch' operator, but with some enhancements:
@@ -19,24 +26,58 @@ import com.yuriia.matcher.impl.MatcherImpl;
  *
  * @author yuriia
  */
-public interface Matcher<T, R> {
+public interface Matcher<T, R> extends Step {
+    
+    R match(T value);
+
+    static <T, R> MatchStep<T, R> when() {
+        return new MatcherImpl<T, R>().start();
+    }
 
     /**
-     * Specify value to match.
+     * Matcher implementation. Holds Matcher state.
      *
-     * @param source - value to match
-     * @return match step
+     * @author yuriia
      */
-    MatchStep<T, R> match(T source);
+    class MatcherImpl<T, R> implements Matcher<T, R> {
+    
+        /**
+         * Collection of Match cases.
+         */
+        private Cases<T, R> cases = new DefaultCases<>();
 
-    /**
-     * Static factory to match given value.
-     *
-     * @param source     - value to match
-     * @param resultType - (type witness) desired type of the result
-     * @return match step
-     */
-    static <A, B> MatchStep<A, B> match(A source, @SuppressWarnings("unused") Class<B> resultType) {
-        return new MatcherImpl<A, B>().match(source);
+        private MatcherImpl() {
+        }
+
+        MatchStep<T, R> start() {
+            return new MatchOrResultStepImpl<>(this);
+        }
+    
+        /**
+         * @return matched value.
+         */
+        @Override
+        public R match(T source) {
+            return cases.match(source);
+        }
+        
+        public void compile() {
+            this.cases = MapLookupCases.compile(cases);
+        }
+    
+        /**
+         * Append match case with given predicate.
+         *
+         * @param predicate - predicate to match values with
+         * @param <C>       - actual type of the value
+         * @return match case
+         */
+        public <C extends T> Case<C, R> addCase(Predicate<? super C> predicate) {
+            return cases.addCase(predicate);
+        }
+        
+        public void setDefaultValue(Supplier<R> defaultValue) {
+            this.cases.setDefaultValue(defaultValue);
+        }
     }
 }
