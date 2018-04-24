@@ -5,11 +5,10 @@ import java.util.function.Supplier;
 /**
  * Step to provide default value (or exception to throw) when nothing matches.
  * It is guaranteed that only one of this methods can be called (and only once).
- * TODO: or refactor to return R instead of EndStep
  *
  * @param <R>
  */
-public interface DefaultMatchStep<R> {
+public interface DefaultCaseStep<R> {
 
     /**
      * Provide default value when current value does not match any of the specified cases.
