@@ -19,7 +19,7 @@ class Case<T, R> {
     /**
      * Function to get result of the current Matcher.
      */
-    private Function<? super T, ? extends R> mapper;
+    private Function<T, R> mapper;
 
     Case(Predicate<T> casePredicate) {
         this.casePredicate = casePredicate;
@@ -51,7 +51,7 @@ class Case<T, R> {
      *
      * @param mapper - mapper function
      */
-    void setCaseMapper(Function<? super T, ? extends R> mapper) {
+    void setCaseMapper(Function<T, R> mapper) {
         this.mapper = mapper;
     }
 
