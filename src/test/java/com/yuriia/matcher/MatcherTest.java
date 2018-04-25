@@ -3,6 +3,7 @@ package com.yuriia.matcher;
 import com.yuriia.matcher.impl.MatcherImpl;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +79,14 @@ public class MatcherTest {
             assertEquals(number.getValue(), value);
         }
     }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void demoTest() {
+        List<Shape> shapes = Arrays.asList(new Circle(2), new Square(3), new Rectangle(2, 5), new Shape() {});
+        for (Shape shape : shapes) {
+
+        }
+    }
 
     private static <K, V> Map.Entry<K, V> pair(K key, V value) {
         return new Map.Entry<K, V>() {
@@ -123,4 +132,15 @@ public class MatcherTest {
             this.b = b;
         }
     }
+
+//            Number area = Matcher.match(shape, Number.class)
+//                    .is(Circle.class).where(c -> c.r > 0)
+//                        .get(c -> Math.PI * c.r * c.r)
+//                    .is(Square.class)
+//                        .get(s -> s.a * s.a)
+//                    .is(Rectangle.class)
+//                        .get(r -> r.a * r.b)
+//                    .orThrow(() -> new IllegalArgumentException("Unknown Shape"));
+//            System.out.println(area);
+    
 }
