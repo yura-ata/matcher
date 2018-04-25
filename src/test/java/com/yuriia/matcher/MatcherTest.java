@@ -80,14 +80,6 @@ public class MatcherTest {
         }
     }
     
-    @Test(expected = IllegalArgumentException.class)
-    public void demoTest() {
-        List<Shape> shapes = Arrays.asList(new Circle(2), new Square(3), new Rectangle(2, 5), new Shape() {});
-        for (Shape shape : shapes) {
-
-        }
-    }
-
     private static <K, V> Map.Entry<K, V> pair(K key, V value) {
         return new Map.Entry<K, V>() {
 
@@ -107,6 +99,24 @@ public class MatcherTest {
             }
         };
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void demoTest() {
+        List<Shape> shapes = Arrays.asList(new Circle(2), new Square(3), new Rectangle(2, 5), new Shape() {});
+        for (Shape shape : shapes) {
+            
+        }
+    }
+
 
     interface Shape {
     }
