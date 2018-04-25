@@ -1,7 +1,11 @@
 package com.yuriia.matcher.impl;
 
-import com.yuriia.matcher.*;
+import com.yuriia.matcher.CaseStep;
+import com.yuriia.matcher.EndStep;
+import com.yuriia.matcher.MatchOrEndStep;
+import com.yuriia.matcher.WhereCaseStep;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -23,22 +27,22 @@ class MatchOrEndStepImpl<T, R> implements MatchOrEndStep<T, R> {
 
     @Override
     public <C extends T> WhereCaseStep<T, C, R> is(Class<C> type) {
-        return new WhereCaseStepImpl<>(matcher, Predicates.isType(type));
+        return new WhereCaseStepImpl<>(this, matcher.addCase(t -> t != null && t.getClass().equals(type)));
     }
 
     @Override
     public <C extends T> CaseStep<T, C, R> is(C constant) {
-        return new WhereCaseStepImpl<>(matcher, Predicates.is(constant));
+        return new WhereCaseStepImpl<>(this, matcher.addCase(t -> Objects.equals(t, constant)));
     }
 
     @Override
     public <C extends T> WhereCaseStep<T, C, R> with(Class<C> type) {
-        return new WhereCaseStepImpl<>(matcher, Predicates.instanceOf(type));
+        return new WhereCaseStepImpl<>(this, matcher.addCase(type::isInstance));
     }
 
     @Override
-    public <C extends T> WhereCaseStep<T, C, R> with(Predicate<? super C> predicate) {
-        return new WhereCaseStepImpl<>(matcher, predicate);
+    public <C extends T> WhereCaseStep<T, C, R> with(Predicate<C> predicate) {
+        return new WhereCaseStepImpl<>(this, matcher.addCase(predicate));
     }
 
     @Override
@@ -48,7 +52,7 @@ class MatchOrEndStepImpl<T, R> implements MatchOrEndStep<T, R> {
 
     @Override
     public EndStep<R> orGet(Supplier<R> value) {
-        matcher.setDefault(value);
+        matcher.setDefault(Objects.requireNonNull(value));
         return this;
     }
 
@@ -60,13 +64,13 @@ class MatchOrEndStepImpl<T, R> implements MatchOrEndStep<T, R> {
 
     @Override
     public EndStep<R> orThrow(RuntimeException exception) {
-        matcher.setThrowable(exception);
+        matcher.setThrowable(Objects.requireNonNull(exception));
         return this;
     }
 
     @Override
     public EndStep<R> orThrow(Supplier<? extends RuntimeException> exception) {
-        matcher.setThrowable(exception);
+        matcher.setThrowable(Objects.requireNonNull(exception));
         return this;
     }
 }

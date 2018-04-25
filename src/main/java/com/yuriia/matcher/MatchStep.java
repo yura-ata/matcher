@@ -16,7 +16,7 @@ public interface MatchStep<T, R> {
      * @param predicate - predicate to test current value
      * @return case step (to specify what to do if value matches)
      */
-    <C extends T> WhereCaseStep<T, C, R> with(Predicate<? super C> predicate);
+    <C extends T> WhereCaseStep<T, C, R> with(Predicate<C> predicate);
 
     /**
      * Match current value is instance of given class.

@@ -5,7 +5,6 @@ import com.yuriia.matcher.Matcher;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -20,24 +19,19 @@ public class MatcherImpl<T, R> implements Matcher<T, R> {
     /**
      * Value to match (can be null).
      */
-    private T source;
+    private T value;
     /**
      * Collection of Match cases.
-     * TODO: add optimization to replace list with Map when all (most?) cases are ConstantPredicates
      */
     private List<Case<T, R>> cases = new ArrayList<>();
     /**
-     * Optional supplier to provide default value when all cases doesn't match.
+     * Default value (or exception) supplier.
      */
-    private Supplier<R> defaultValue;
-    /**
-     * Supplier to provide unchecked exception to throw when all cases doesn't match.
-     */
-    private Supplier<? extends RuntimeException> error = () -> new IllegalArgumentException("Nothing matches");
+    private Supplier<R> defaultValue = () -> { throw new IllegalArgumentException("Nothing matches"); };
 
     @Override
     public MatchStep<T, R> match(T source) {
-        this.source = source;
+        this.value = source;
         return new MatchOrEndStepImpl<>(this);
     }
 
@@ -45,15 +39,11 @@ public class MatcherImpl<T, R> implements Matcher<T, R> {
      * @return matched value.
      */
     R get() {
-        for (Case<T, R> matchCase : cases) {
-            if (matchCase.matches(source)) {
-                return matchCase.map(source);
-            }
-        }
-        if (defaultValue != null) {
-            return defaultValue.get();
-        }
-        throw error.get();
+        return cases.stream()
+                .filter(c -> c.matches(value))
+                .map(c -> c.map(value))
+                .findFirst()
+                .orElseGet(defaultValue);
     }
 
     /**
@@ -64,9 +54,9 @@ public class MatcherImpl<T, R> implements Matcher<T, R> {
      * @return match case
      */
     @SuppressWarnings("unchecked")
-    <C extends T> Case<C, R> addCase(Predicate<? super C> predicate) {
+    <C extends T> Case<C, R> addCase(Predicate<C> predicate) {
         Case<C, R> matchCase = new Case<>(predicate);
-        // TODO: remove this cast :(
+        // it is guaranteed to call case[C, R] only when value is C (and not just T)
         cases.add((Case<T, R>) matchCase);
         return matchCase;
     }
@@ -77,7 +67,7 @@ public class MatcherImpl<T, R> implements Matcher<T, R> {
      * @param value - default value supplier.
      */
     void setDefault(Supplier<R> value) {
-        this.defaultValue = Objects.requireNonNull(value);
+        this.defaultValue = value;
     }
 
     /**
@@ -95,7 +85,7 @@ public class MatcherImpl<T, R> implements Matcher<T, R> {
      * @param error - unchecked exception supplier
      */
     void setThrowable(Supplier<? extends RuntimeException> error) {
-        this.error = Objects.requireNonNull(error);
+        this.defaultValue = () -> { throw error.get(); };
     }
 
     /**
@@ -104,7 +94,6 @@ public class MatcherImpl<T, R> implements Matcher<T, R> {
      * @param error - unchecked exception
      */
     void setThrowable(RuntimeException error) {
-        Objects.requireNonNull(error);
-        this.error = () -> error;
+        this.defaultValue = () -> { throw error; };
     }
 }

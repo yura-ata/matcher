@@ -1,7 +1,5 @@
 package com.yuriia.matcher.impl;
 
-import com.yuriia.matcher.Predicates;
-
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -17,13 +15,13 @@ class Case<T, R> {
     /**
      * Predicate to check if given mapper function should be executed to get result.
      */
-    private Predicate<? super T> casePredicate;
+    private Predicate<T> casePredicate;
     /**
      * Function to get result of the current Matcher.
      */
     private Function<? super T, ? extends R> mapper;
 
-    Case(Predicate<? super T> casePredicate) {
+    Case(Predicate<T> casePredicate) {
         this.casePredicate = casePredicate;
     }
 
@@ -63,7 +61,7 @@ class Case<T, R> {
      *
      * @param when - additional predicate
      */
-    void addWhen(Predicate<? super T> when) {
-        this.casePredicate = Predicates.and(casePredicate, when);
+    void addWhen(Predicate<T> when) {
+        this.casePredicate = casePredicate.and(when);
     }
 }

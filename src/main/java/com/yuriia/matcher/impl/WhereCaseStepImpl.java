@@ -15,28 +15,28 @@ import java.util.function.Predicate;
 class WhereCaseStepImpl<T, C extends T, R> implements WhereCaseStep<T, C, R> {
 
     /**
-     * State of the Current matcher.
+     * Parent match step to continue matching.
      */
-    private final MatcherImpl<T, R> matcher;
+    private final MatchOrEndStep<T, R> parentStep;
     /**
      * Current match case.
      */
-    private final Case<C, R> matcherCase;
+    private final Case<C, R> matchCase;
 
-    WhereCaseStepImpl(MatcherImpl<T, R> matcher, Predicate<? super C> predicate) {
-        this.matcher = matcher;
-        this.matcherCase = matcher.addCase(predicate);
+    WhereCaseStepImpl(MatchOrEndStep<T, R> parentStep, Case<C, R> matchCase) {
+        this.parentStep = parentStep;
+        this.matchCase = matchCase;
     }
 
     @Override
     public CaseStep<T, C, R> where(Predicate<C> predicate) {
-        matcherCase.addWhen(predicate);
+        matchCase.addWhen(predicate);
         return this;
     }
 
     @Override
     public MatchOrEndStep<T, R> get(Function<C, R> mapper) {
-        matcherCase.setCaseMapper(mapper);
-        return new MatchOrEndStepImpl<>(matcher);
+        matchCase.setCaseMapper(mapper);
+        return parentStep;
     }
 }
