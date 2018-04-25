@@ -7,5 +7,5 @@ package com.yuriia.matcher;
  * @param <R> - type of the result value
  * @author yuriia
  */
-public interface MatchOrEndStep<T, R> extends MatchStep<T, R>, DefaultCaseStep<R>, EndStep<R> {
+public interface MatchOrEndStep<T, R> extends MatchStep<T, R>, EndStep<R> {
 }

@@ -31,8 +31,7 @@ public class MatcherTest {
                         .get(i -> "integer: " + i)
                     .with(v -> v.equals("str"))
                         .get(v -> "predicate matcher")
-                    .orGet("nothing")
-                    .value();
+                    .orGet("nothing");
             assertEquals(object.getValue(), value);
         }
 
@@ -47,8 +46,7 @@ public class MatcherTest {
                         .get(l -> "Long: " + l)
                     .is(Float.class).where(f -> f < 3)
                         .get(f -> "Float: " + f)
-                    .orGet("nothing")
-                    .value();
+                    .orGet("nothing");
             assertEquals(number.getValue(), value);
         }
 
@@ -63,7 +61,7 @@ public class MatcherTest {
                         .get(s -> s.a * s.a)
                     .is(Rectangle.class)
                         .get(r -> r.a * r.b)
-                    .value();
+                    .get();
             assertEquals(shape.getValue(), value);
         }
 
@@ -76,8 +74,7 @@ public class MatcherTest {
                         .get(l -> "instanceof Long: " + l)
                     .is(Float.class).where(f -> f < 3)
                         .get(f -> "Float: " + f)
-                    .orGet(() -> "nothing")
-                    .value();
+                    .orGet(() -> "nothing");
             assertEquals(number.getValue(), value);
         }
     }

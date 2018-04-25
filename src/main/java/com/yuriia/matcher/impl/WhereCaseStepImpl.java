@@ -1,7 +1,9 @@
 package com.yuriia.matcher.impl;
 
 import com.yuriia.matcher.CaseStep;
+import com.yuriia.matcher.EndStep;
 import com.yuriia.matcher.MatchOrEndStep;
+import com.yuriia.matcher.MatchStep;
 import com.yuriia.matcher.WhereCaseStep;
 
 import java.util.function.Function;

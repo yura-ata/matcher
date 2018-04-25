@@ -1,7 +1,6 @@
 package com.yuriia.matcher.impl;
 
 import com.yuriia.matcher.CaseStep;
-import com.yuriia.matcher.EndStep;
 import com.yuriia.matcher.MatchOrEndStep;
 import com.yuriia.matcher.WhereCaseStep;
 
@@ -46,31 +45,31 @@ class MatchOrEndStepImpl<T, R> implements MatchOrEndStep<T, R> {
     }
 
     @Override
-    public R value() {
+    public R get() {
         return matcher.get();
     }
 
     @Override
-    public EndStep<R> orGet(Supplier<R> value) {
+    public R orGet(Supplier<R> value) {
         matcher.setDefault(Objects.requireNonNull(value));
-        return this;
+        return get();
     }
 
     @Override
-    public EndStep<R> orGet(R value) {
+    public R orGet(R value) {
         matcher.setDefault(value);
-        return this;
+        return get();
     }
 
     @Override
-    public EndStep<R> orThrow(RuntimeException exception) {
+    public R orThrow(RuntimeException exception) {
         matcher.setThrowable(Objects.requireNonNull(exception));
-        return this;
+        return get();
     }
 
     @Override
-    public EndStep<R> orThrow(Supplier<? extends RuntimeException> exception) {
+    public R orThrow(Supplier<? extends RuntimeException> exception) {
         matcher.setThrowable(Objects.requireNonNull(exception));
-        return this;
+        return get();
     }
 }
