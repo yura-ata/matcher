@@ -39,11 +39,12 @@ public class MatcherImpl<T, R> implements Matcher<T, R> {
      * @return matched value.
      */
     R get() {
-        return cases.stream()
-                .filter(c -> c.matches(value))
-                .map(c -> c.map(value))
-                .findFirst()
-                .orElseGet(defaultValue);
+        for (Case<T, R> matchCase : cases) {
+            if (matchCase.matches(value)) {
+                return matchCase.map(value);
+            }
+        }
+        return defaultValue.get();
     }
 
     /**
