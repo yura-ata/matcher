@@ -3,46 +3,46 @@ package com.yuriia.matcher;
 import java.util.function.Predicate;
 
 /**
- * First (and probably main) step of the Matcher. Similar to the 'case' keyword in the 'switch' statement.
- * It is impossible to call terminal or modulating steps from this step.
+ * Match step of the Matcher - same as 'case' keyword in the 'switch' statement.
  *
  * @author yuriia
  */
 public interface MatchStep<T, R> {
 
     /**
-     * Match current values using given {@link Predicate}.
+     * Check if current value satisfies given {@link Predicate}.
      *
      * @param predicate - predicate to test current value
+     * @param <C>       - real type of the values (so that next steps doesn't need to cast value to C)
      * @return case step (to specify what to do if value matches)
      */
-    <C extends T> WhereCaseStep<T, C, R> with(Predicate<C> predicate);
+    <C extends T> WhereCaseStep<T, C, R> when(Predicate<C> predicate);
 
     /**
-     * Match current value is instance of given class.
-     *
-     * @param type - desired value type
-     * @param <C>  - real type of the values (so that next steps doesn't need to cast it to C)
-     * @return case step (to specify what to do if value matches)
-     */
-    <C extends T> WhereCaseStep<T, C, R> with(Class<C> type);
-
-    /**
-     * Match current value class equals to given class.
+     * Check if class of current value when equals to given class.
      * Not an instanceof check, but can be optimized into O(1) map look-up instead O(n) checks.
      *
      * @param type - desired value type
-     * @param <C>  - real type of the values (so that next steps doesn't need to cast it to C)
+     * @param <C>  - real type of the values (so that next steps doesn't need to cast value to C)
      * @return case step (to specify what to do if value matches)
      */
-    <C extends T> WhereCaseStep<T, C, R> is(Class<C> type);
+    <C extends T> WhereCaseStep<T, C, R> when(Class<C> type);
 
     /**
-     * Match current value is equals to the given constant.
+     * Check if current value when equals to the given constant.
      *
      * @param constant - constant value to match on
-     * @param <C>      - real type of the values (so that next steps doesn't need to cast it to C)
+     * @param <C>      - real type of the values (so that next steps doesn't need to cast value to C)
      * @return case step (to specify what to do if value matches)
      */
-    <C extends T> CaseStep<T, C, R> is(C constant);
+    <C extends T> CaseStep<T, C, R> when(C constant);
+
+    /**
+     * Check if current value when instance of given type (instanceof).
+     *
+     * @param type - desired value type
+     * @param <C>  - real type of the values (so that next steps doesn't need to cast value to C)
+     * @return case step (to specify what to do if value matches)
+     */
+    <C extends T> WhereCaseStep<T, C, R> instanceOf(Class<C> type);
 }

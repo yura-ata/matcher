@@ -4,7 +4,7 @@ import java.util.function.Predicate;
 
 /**
  * Step to modulate {@link CaseStep} (case clause) with additional predicate. For example:
- * {@code .match(object).with(String.class).where(s -> s.isEmpty()).get(s -> "empty") } - match only empty strings
+ * {@code .match(object).with(String.class).where(s -> s.isEmpty()).then(s -> "empty") } - match only empty strings
  *
  * @author yuriia
  */

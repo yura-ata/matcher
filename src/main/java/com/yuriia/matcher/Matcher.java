@@ -1,42 +1,88 @@
 package com.yuriia.matcher;
 
-import com.yuriia.matcher.impl.MatcherImpl;
+import java.util.Optional;
 
 /**
  * Functionality to emulate Pattern Matching. It is similar to 'switch' operator, but with some enhancements:
  * <ul>
  * <li>More types to switch on: Classes (types) or Predicates (patterns)</li>
  * <li>Can return value (expression switch) and not just execute statements</li>
- * <li>No need to cast matched values if case is a type</li>
+ * <li>No need to cast values in case expressions</li>
  * <li>Better readability?</li>
- * <li>Lazy</li>
  * </ul>
- * Though there are obvious drawbacks:
- * <ul>
- * <li>it uses more memory (several Objects are used to represent matcher state) than just a 'switch' statement</li>
- * <li>performance implications (especially for Predicate cases where it will be O(n) instead of O(1)) </li>
- * </ul>
+ * Matcher is actually a terminal step in the chain of Matcher steps.
  *
  * @author yuriia
  */
 public interface Matcher<T, R> {
 
     /**
-     * Specify value to match.
+     * Match given values with specified patterns.
      *
-     * @param source - value to match
-     * @return match step
+     * @return result of the pattern matching
      */
-    MatchStep<T, R> match(T source);
+    R match(T value);
+
+    default Optional<R> matchAsOptional(T value) {
+        return Optional.ofNullable(match(value));
+    }
 
     /**
-     * Static factory to match given value.
+     * Create builder to configure matcher.
      *
-     * @param source     - value to match
-     * @param resultType - (type witness) desired type of the result
-     * @return match step
+     * @param <FROM> - type of value that we need to match
+     * @param <TO>   - type of the result
+     * @return builder
      */
-    static <A, B> MatchStep<A, B> match(A source, @SuppressWarnings("unused") Class<B> resultType) {
-        return new MatcherImpl<A, B>().match(source);
+    static <FROM, TO> Builder<FROM, TO> matcher() {
+        return new Builder<>();
+    }
+
+    /**
+     * Convenience Matcher builder to specify from and ty types: generic type inference is not powerful enough to infer
+     * this types from last call of method chain.
+     * T and R are actually specified only by Matcher.match method, but has to be used in all preceding calls (when, then, etc.).
+     *
+     * @param <T> - from type holder
+     * @param <R> - to type holder
+     * @author yuriia
+     */
+    class Builder<T, R> {
+
+        /**
+         * Use from() or to() factories instead.
+         */
+        private Builder() {
+        }
+
+        /**
+         * Get matcher builder converted from [T, R] into [FROM, R].
+         *
+         * @param from   - class just to specify FROM type.
+         * @param <FROM> - type of matcher result
+         * @return builder
+         */
+        <FROM> Builder<FROM, R> from(@SuppressWarnings("unused") Class<FROM> from) {
+            @SuppressWarnings("unchecked") Builder<FROM, R> builder = (Builder<FROM, R>) this;
+            return builder;
+        }
+
+        /**
+         * Create matcher with given types and start matching (return MatchStep).
+         *
+         * @param to   - class just to specify TO type
+         * @param <TO> - type of matcher value
+         * @return builder
+         */
+        <TO> MatchStep<T, TO> to(@SuppressWarnings("unused") Class<TO> to) {
+            return new MatcherImpl<>();
+        }
+
+        /**
+         * @return started matcher with current types.
+         */
+        MatchStep<T, R> get() {
+            return new MatcherImpl<>();
+        }
     }
 }

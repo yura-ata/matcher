@@ -3,11 +3,11 @@ package com.yuriia.matcher;
 import java.util.function.Function;
 
 /**
- * Simple case step. Similar to the statement after 'case' keyword in the 'switch'.
+ * Case step. Similar to the expression after 'case' keyword in the 'switch' statement.
  *
  * @param <T> - type of the matching value
  * @param <C> - actual type of the matching value the current case. Example:
- *            {@code .match(object).with(String.class)} - now C is String instead of just Object
+ *            {@code .match(object).with(String.class)} - now C when String instead of just Object
  * @author yuriia
  */
 public interface CaseStep<T, C extends T, R> {
@@ -18,5 +18,5 @@ public interface CaseStep<T, C extends T, R> {
      * @param mapper - function to map matched value into result
      * @return next step (terminal step or more cases)
      */
-    MatchOrEndStep<T, R> get(Function<C, R> mapper);
+    EndStep<T, R> then(Function<C, R> mapper);
 }
