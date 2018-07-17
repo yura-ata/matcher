@@ -11,6 +11,34 @@ import java.util.Optional;
  * <li>Better readability?</li>
  * </ul>
  * Matcher is actually a terminal step in the chain of Matcher steps.
+ * <p/>
+ * API usage example:
+ * <code><pre>
+ *     List&lt;Shape> shapes = ...
+ *     Matcher&lt;Shape, Number> matcher = <i>matcher()</i>.from(Shape.class).to(Number.class)
+ *          .when(Circle.class)
+ *              .then(c -> c.r * c.r * Math.PI)
+ *          .when(Square.class).where(s -> s.a > 1)
+ *              .then(s -> s.a * s.a)
+ *          .when(Rectangle.class)
+ *              .then(r -> r.a * r.b)
+ *          .orThrow(new IllegalArgumentException("Unknown Shape"))
+ *     for (Shape shape : shapes) {
+ *          Number area = matcher.match(shape);
+ *     }
+ * </pre></code>
+ * Or:
+ * <code><pre>
+ *     Object object = ...
+ *     String formatted = <i>matcher()</i>.to(String.class)
+ *          .when(Number.class)
+ *              .then(number -> "Number: " + number)
+ *          .when(String.class).where(string -> !string.isEmpty())
+ *              .then(string -> "String: " + string)
+ *          .when(Date.class)
+ *              .then(date -> "Date: " + date.getTime())
+ *          .match(object);
+ * </pre></code>
  *
  * @author yuriia
  */
@@ -69,7 +97,7 @@ public interface Matcher<T, R> {
          * @param <FROM> - type of matcher result
          * @return builder
          */
-        <FROM> Builder<FROM, R> from(@SuppressWarnings("unused") Class<FROM> from) {
+        public <FROM> Builder<FROM, R> from(@SuppressWarnings("unused") Class<FROM> from) {
             @SuppressWarnings("unchecked") Builder<FROM, R> builder = (Builder<FROM, R>) this;
             return builder;
         }
@@ -81,14 +109,14 @@ public interface Matcher<T, R> {
          * @param <TO> - type of matcher value
          * @return builder
          */
-        <TO> MatchStep<T, TO> to(@SuppressWarnings("unused") Class<TO> to) {
+        public <TO> MatchStep<T, TO> to(@SuppressWarnings("unused") Class<TO> to) {
             return new MatcherImpl<>();
         }
 
         /**
          * @return started matcher with current types.
          */
-        MatchStep<T, R> get() {
+        public MatchStep<T, R> get() {
             return new MatcherImpl<>();
         }
     }

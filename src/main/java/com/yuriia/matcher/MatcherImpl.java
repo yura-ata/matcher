@@ -61,13 +61,13 @@ class MatcherImpl<T, R> implements Matcher<T, R>, WhereCaseStep<T, T, R>, EndSte
 
     @Override
     public CaseStep<T, T, R> where(Predicate<T> predicate) {
-        cases.peekLast().addWhen(predicate);
+        cases.peekLast().when(predicate);
         return this;
     }
 
     @Override
     public EndStep<T, R> then(Function<T, R> mapper) {
-        cases.peekLast().setCaseMapper(mapper);
+        cases.peekLast().caseMapper(mapper);
         return this;
     }
 
@@ -141,7 +141,7 @@ class MatcherImpl<T, R> implements Matcher<T, R>, WhereCaseStep<T, T, R>, EndSte
         private Function<T, R> mapper;
 
         /**
-         * Create Match Case with given predicate. Mapper function will be applied with subsequent setCaseMapper call.
+         * Create Case with given predicate. Mapper function will be applied with subsequent {@link #caseMapper(Function)} call.
          *
          * @param casePredicate - match case
          */
@@ -175,10 +175,7 @@ class MatcherImpl<T, R> implements Matcher<T, R>, WhereCaseStep<T, T, R>, EndSte
          *
          * @param mapper - mapper function
          */
-        void setCaseMapper(Function<T, R> mapper) {
-            if (this.mapper != null) {
-                throw new IllegalStateException("Mapper is already set");
-            }
+        void caseMapper(Function<T, R> mapper) {
             this.mapper = mapper;
         }
 
@@ -188,7 +185,7 @@ class MatcherImpl<T, R> implements Matcher<T, R>, WhereCaseStep<T, T, R>, EndSte
          *
          * @param when - additional predicate
          */
-        void addWhen(Predicate<T> when) {
+        void when(Predicate<T> when) {
             casePredicate = casePredicate.and(when);
         }
     }
