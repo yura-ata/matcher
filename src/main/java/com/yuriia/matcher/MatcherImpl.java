@@ -12,7 +12,7 @@ import java.util.function.Supplier;
  *
  * @author yuriia
  */
-class MatcherImpl<T, R> implements EndStep<T, R>, WhereCaseStep<T, T, R> {
+class MatcherImpl<T, R> implements Matcher<T, R>, WhereCaseStep<T, T, R>, EndStep<T, R> {
 
     /**
      * Collection of Match cases.
@@ -23,18 +23,52 @@ class MatcherImpl<T, R> implements EndStep<T, R>, WhereCaseStep<T, T, R> {
      */
     private Supplier<R> defaultValue = () -> null;
 
+    /**
+     * No accessible outside this package. Use {@link Matcher.Builder} to create matcher instance.
+     */
     MatcherImpl() {
     }
 
     @Override
-    public EndStep<T, R> then(Function<T, R> mapper) {
-        this.cases.peekLast().setCaseMapper(mapper);
+    public R match(T value) {
+        return cases.stream()
+                .filter(matchCase -> matchCase.matches(value))
+                .map(matchCase -> matchCase.map(value))
+                .findFirst()
+                .orElseGet(() -> Value.of(defaultValue))
+                .getValue();
+    }
+
+    @Override
+    public <C extends T> WhereCaseStep<T, C, R> when(Class<C> type) {
+        return appendCase(value -> value != null && value.getClass().equals(type));
+    }
+
+    @Override
+    public <C extends T> WhereCaseStep<T, C, R> when(Predicate<C> predicate) {
+        return appendCase(predicate);
+    }
+
+    @Override
+    public <C extends T> CaseStep<T, C, R> when(C constant) {
+        return appendCase(value -> Objects.equals(value, constant));
+    }
+
+    @Override
+    public <C extends T> WhereCaseStep<T, C, R> instanceOf(Class<C> type) {
+        return appendCase(type::isInstance);
+    }
+
+    @Override
+    public CaseStep<T, T, R> where(Predicate<T> predicate) {
+        cases.peekLast().addWhen(predicate);
         return this;
     }
 
     @Override
-    public R match(T value) {
-        return compute(value, defaultValue);
+    public EndStep<T, R> then(Function<T, R> mapper) {
+        cases.peekLast().setCaseMapper(mapper);
+        return this;
     }
 
     @Override
@@ -58,37 +92,18 @@ class MatcherImpl<T, R> implements EndStep<T, R>, WhereCaseStep<T, T, R> {
 
     @Override
     public Matcher<T, R> orThrow(Supplier<? extends RuntimeException> exception) {
-        Objects.requireNonNull(exception);
-        defaultValue = throwing(exception);
+        defaultValue = throwing(Objects.requireNonNull(exception));
         return this;
     }
 
-    @Override
-    public <C extends T> WhereCaseStep<T, C, R> when(Predicate<C> predicate) {
-        return appendCase(predicate);
-    }
-
-    @Override
-    public <C extends T> WhereCaseStep<T, C, R> instanceOf(Class<C> type) {
-        return appendCase(type::isInstance);
-    }
-
-    @Override
-    public <C extends T> WhereCaseStep<T, C, R> when(Class<C> type) {
-        return appendCase(value -> value != null && value.getClass().equals(type));
-    }
-
-    @Override
-    public <C extends T> CaseStep<T, C, R> when(C constant) {
-        return appendCase(value -> Objects.equals(value, constant));
-    }
-
-    @Override
-    public CaseStep<T, T, R> where(Predicate<T> predicate) {
-        cases.peekLast().addWhen(predicate);
-        return this;
-    }
-
+    /**
+     * Convenience method to append new match case (with specified predicate).
+     * Match expression will be specified by {@link #then(Function)} step.
+     *
+     * @param predicate - case predicate
+     * @param <C>       - type of predicate value
+     * @return where case step (with correct value type)
+     */
     @SuppressWarnings("unchecked")
     private <C extends T> WhereCaseStep<T, C, R> appendCase(Predicate<C> predicate) {
         cases.add((Case<T, R>) new Case<>(predicate));
@@ -96,19 +111,11 @@ class MatcherImpl<T, R> implements EndStep<T, R>, WhereCaseStep<T, T, R> {
     }
 
     /**
-     * Get matcher result.
+     * Wrap given Exception supplier into R value supplier (and throw it on get).
      *
-     * @param defaultValue - supplier for default value
-     * @return matched value.
+     * @param exception - exception supplier
+     * @return value supplier that throws given exception
      */
-    private R compute(T value, Supplier<R> defaultValue) {
-        return cases.stream()
-                .filter(matchCase -> matchCase.matches(value))
-                .map(matchCase -> matchCase.map(value))
-                .findFirst()
-                .orElseGet(defaultValue);
-    }
-
     private Supplier<R> throwing(Supplier<? extends RuntimeException> exception) {
         return () -> {
             throw exception.get();
@@ -158,8 +165,8 @@ class MatcherImpl<T, R> implements EndStep<T, R>, WhereCaseStep<T, T, R> {
          * @param value - value to map
          * @return result of matching
          */
-        R map(T value) {
-            return this.mapper.apply(value);
+        Value<R> map(T value) {
+            return new Value<>(mapper.apply(value));
         }
 
         /**
@@ -182,7 +189,48 @@ class MatcherImpl<T, R> implements EndStep<T, R>, WhereCaseStep<T, T, R> {
          * @param when - additional predicate
          */
         void addWhen(Predicate<T> when) {
-            this.casePredicate = casePredicate.and(when);
+            casePredicate = casePredicate.and(when);
+        }
+    }
+
+    /**
+     * Data class to box a value. Used to allow null as match result - Otherwise Optional::orElseGet will be called which
+     * will produce default value (which might be different from null - i.e. exception).
+     *
+     * @param <E> - actual value type
+     */
+    private static class Value<E> {
+
+        /**
+         * Boxed value. Can be null.
+         */
+        private E value;
+
+        /**
+         * Construct boxed value.
+         *
+         * @param value - value
+         */
+        private Value(E value) {
+            this.value = value;
+        }
+
+        /**
+         * Build value from supplier.
+         *
+         * @param valueSupplier - value supplier
+         * @param <E>           - actual value type
+         * @return boxed value
+         */
+        private static <E> Value<E> of(Supplier<E> valueSupplier) {
+            return new Value<>(valueSupplier.get());
+        }
+
+        /**
+         * @return boxed value
+         */
+        E getValue() {
+            return value;
         }
     }
 }

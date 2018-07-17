@@ -19,10 +19,17 @@ public interface Matcher<T, R> {
     /**
      * Match given values with specified patterns.
      *
+     * @param value - value to match
      * @return result of the pattern matching
      */
     R match(T value);
 
+    /**
+     * Match given values into Optional with specified patterns.
+     *
+     * @param value - value to match
+     * @return result of the pattern matching wrapped in optional
+     */
     default Optional<R> matchAsOptional(T value) {
         return Optional.ofNullable(match(value));
     }

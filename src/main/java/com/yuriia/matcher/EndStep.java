@@ -6,12 +6,13 @@ package com.yuriia.matcher;
  * <ul>
  * <li>Add new case into current matcher (Match step)</li>
  * <li>Specify default value and match value (DefaultValueStep)</li>
- * <li>Match value (Matcher)</li>
+ * <li>Match value - terminal step (Matcher)</li>
  * </ul>
  *
  * @param <T> - type of the value being matched
  * @param <R> - type of the result value
  * @author yuriia
  */
-public interface EndStep<T, R> extends MatchStep<T, R>, DefaultValueStep<T, R>, Matcher<T, R> {
+@SuppressWarnings("WeakerAccess")
+public interface EndStep<T, R> extends Matcher<T, R>, MatchStep<T, R>, DefaultValueStep<T, R> {
 }

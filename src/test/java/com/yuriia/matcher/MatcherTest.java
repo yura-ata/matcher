@@ -2,25 +2,26 @@ package com.yuriia.matcher;
 
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 
 import static com.yuriia.matcher.Matcher.matcher;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
- * TODO: add more tests, some features and corner cases are not tested at all
+ * Matcher simple tests.
  *
  * @author yuriia
  */
 public class MatcherTest {
 
     @Test
-    public void exampleTest() {
+    public void testSimpleUseCases() {
         List<Map.Entry<Object, String>> objects = asList(
                 pair("str", "predicate matcher"), pair("long str", "long string: long str"),
                 pair(5, "integer: 5"), pair("string", "long string: string"), pair(new Date(), "nothing")
@@ -54,16 +55,16 @@ public class MatcherTest {
             assertEquals(number.getValue(), value);
         }
 
-        List<Map.Entry<Shape, Number>> shapes = asList(pair(new Circle(2), 12.566370614359172),
-                pair(new Square(3), 9), pair(new Rectangle(2, 5), 10));
-        Matcher<Shape, Number> matcher2 = matcher().from(Shape.class).to(Number.class)
-                .when(Circle.class)
+        List<Map.Entry<Demo.Shape, Number>> shapes = asList(pair(new Demo.Circle(2), 12.566370614359172),
+                pair(new Demo.Square(3), 9), pair(new Demo.Rectangle(2, 5), 10));
+        Matcher<Demo.Shape, Number> matcher2 = matcher().from(Demo.Shape.class).to(Number.class)
+                .when(Demo.Circle.class)
                     .then(c -> Math.PI * c.r * c.r)
-                .when(Square.class)
+                .when(Demo.Square.class)
                     .then(s -> s.a * s.a)
-                .when(Rectangle.class)
+                .when(Demo.Rectangle.class)
                     .then(r -> r.a * r.b);
-        for (Map.Entry<Shape, Number> shape : shapes) {
+        for (Map.Entry<Demo.Shape, Number> shape : shapes) {
             Number value = matcher2.match(shape.getKey());
             assertEquals(shape.getValue(), value);
         }
@@ -81,6 +82,101 @@ public class MatcherTest {
                     .match(number.getKey());
             assertEquals(number.getValue(), value);
         }
+    }
+
+    @Test
+    public void testInstanceOfVsWhen() {
+       String value = matcher().to(String.class)
+                .when(Number.class)
+                    .then(n -> "Should not be returned, we check types directly")
+                .when(Long.class)
+                    .then(l -> "correct")
+                .match(42L);
+
+       assertEquals("correct", value);
+
+        value = matcher().to(String.class)
+                .instanceOf(Number.class)
+                    .then(n -> "correct")
+                .when(Long.class)
+                    .then(l -> "Should not be returned, we check instanceof")
+                .match(42L);
+
+        assertEquals("correct", value);
+    }
+
+    @Test
+    public void testDefaultValues() {
+        String value = matcher().to(String.class)
+                .when(Boolean.class)
+                    .then(n -> "boolean")
+                .when(Long.class)
+                    .then(l -> "long")
+                .match("string");
+        assertNull(value);
+
+        value = matcher().to(String.class)
+                .when(Boolean.class)
+                    .then(n -> "boolean")
+                .when(Long.class)
+                    .then(l -> "long")
+                .orDefault(() -> "default")
+                .match("string");
+        assertEquals("default", value);
+
+        value = matcher().to(String.class)
+                .when(Boolean.class)
+                    .then(n -> "boolean")
+                .when(Long.class)
+                    .then(l -> "long")
+                .orDefault("default")
+                .match("string");
+        assertEquals("default", value);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testExceptionAsDefault() {
+        matcher().get()
+                .when(Boolean.class)
+                    .then(n -> "boolean")
+                .when(Long.class)
+                    .then(l -> "long")
+                .orThrow(new IllegalArgumentException())
+                .match("string");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testExceptionSupplierAsDefault() {
+        matcher().get()
+                .when(Boolean.class)
+                    .then(n -> "boolean")
+                .when(Long.class)
+                    .then(l -> "long")
+                .orThrow(IllegalArgumentException::new)
+                .match("string");
+    }
+
+    @Test
+    public void testNullResult() {
+        String value = matcher().to(String.class)
+                .when(Boolean.class)
+                    .then(n -> "boolean")
+                .when(String.class)
+                    .then(s -> null)
+                .orThrow(new IllegalArgumentException())
+                .match("string");
+        assertNull(value);
+    }
+
+    @Test
+    public void testMatchAsOptional() {
+        Optional<String> value = matcher().to(String.class)
+                .when(Boolean.class)
+                    .then(n -> "boolean")
+                .when(Long.class)
+                    .then(l -> "long")
+                .matchAsOptional("string");
+        assertFalse(value.isPresent());
     }
 
     private static <K, V> Map.Entry<K, V> pair(K key, V value) {
@@ -102,58 +198,4 @@ public class MatcherTest {
             }
         };
     }
-
-
-
-
-
-
-
-
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void demoTest() {
-        List<Shape> shapes = Arrays.asList(new Circle(2), new Square(3), new Rectangle(2, 5), new Shape() {});
-        for (Shape shape : shapes) {
-
-        }
-    }
-
-
-    interface Shape {
-    }
-
-    static final class Circle implements Shape {
-        int r;
-        Circle(int r) {
-            this.r = r;
-        }
-    }
-
-    static final class Square implements Shape {
-        int a;
-        Square(int a) {
-            this.a = a;
-        }
-    }
-
-    static final class Rectangle implements Shape {
-        int a, b;
-        Rectangle(int a, int b) {
-            this.a = a;
-            this.b = b;
-        }
-    }
-
-//            Number area = Matcher.match(shape, Number.class)
-//                    .when(Circle.class).where(c -> c.r > 0)
-//                        .then(c -> Math.PI * c.r * c.r)
-//                    .when(Square.class)
-//                        .then(s -> s.a * s.a)
-//                    .when(Rectangle.class)
-//                        .then(r -> r.a * r.b)
-//                    .orThrow(() -> new IllegalArgumentException("Unknown Shape"));
-//            System.out.println(area);
-
 }
